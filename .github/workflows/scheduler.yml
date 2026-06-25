@@ -2,8 +2,8 @@ name: Quantum Job Monitor
 
 on:
   schedule:
-    - cron: '0 7 * * *'  # Cada día a las 7:00 UTC (9:00 hora España)
-  workflow_dispatch:      # Permite ejecutarlo manualmente también
+    - cron: '0 7 * * *'
+  workflow_dispatch:
 
 jobs:
   run-monitor:
