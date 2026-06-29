@@ -8,6 +8,8 @@ on:
 jobs:
   run-monitor:
     runs-on: ubuntu-latest
+    env:
+      GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
