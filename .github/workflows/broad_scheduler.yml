@@ -1,0 +1,22 @@
+name: Broad Tech Job Monitor
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-monitor:
+    runs-on: ubuntu-latest
+    env:
+      GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+      - name: Run broad monitor
+        run: python quantum_broad_monitor.py
