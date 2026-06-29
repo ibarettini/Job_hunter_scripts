@@ -19,7 +19,8 @@ from bs4 import BeautifulSoup
 
 EMAIL_FROM = "inakibarettinigmail.com"        # Tu Gmail
 EMAIL_TO   = "inakibarettini@gmail.com"        # Donde recibes el resumen
-GMAIL_APP_PASSWORD = "xovl tyyw omvc mjjj"  # App Password de Gmail (sin espacios internos)
+import os
+GMAIL_APP_PASSWORD = os.environ.get("GMAIL_PASSWORD", "")  # App Password de Gmail (sin espacios internos)
 
 # Palabras clave para roles (cualquiera de estas)
 ROLE_KEYWORDS = [
