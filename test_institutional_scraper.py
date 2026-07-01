@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test scraper v6 - imec deep dive + BSC confirmation
+Test scraper v7 - CIC Nanogune and DIPC/CFM
 """
 
 import requests
@@ -15,21 +15,19 @@ ROLE_KEYWORDS = [
     "knowledge transfer", "valorisation", "market development",
     "bd manager", "commercial", "ecosystem", "ip manager",
     "chief of staff", "director", "manager", "head of",
-    "project manager", "sales", "support services",
+    "project manager", "sales", "transferencia", "desarrollo de negocio",
+    "gestor", "responsable", "innovacion",
 ]
 
 EXCLUDE_KEYWORDS = [
     "phd", "postdoc", "research scientist", "software engineer",
     "hardware engineer", "lab technician", "internship", "professor",
-    "postdoctoral", "becario", "undergraduate", "student", "r1", "r0", "r2",
+    "postdoctoral", "becario", "undergraduate", "student",
+    "investigador", "físico", "beca",
 ]
 
-def test_imec_jobs():
-    print("\n=== IMEC - Job opportunities deep dive ===")
-    urls = [
-        "https://www.imec-int.com/en/work-at-imec/job-opportunities",
-        "https://www.imec-int.com/en/careers/sales-management-support-services",
-    ]
+def test_portal_generic(name, urls):
+    print(f"\n=== {name.upper()} ===")
     for url in urls:
         try:
             r = requests.get(url, headers=HEADERS, timeout=10)
@@ -43,64 +41,51 @@ def test_imec_jobs():
                 all_links = soup.find_all("a", href=True)
                 print(f"Total links: {len(all_links)}")
                 
-                # Job links with numeric IDs
-                job_links = [l for l in all_links if re.search(r'\d{4,}|/job/|/vacancy/', l.get('href', ''))]
-                print(f"Job links: {len(job_links)}")
-                for l in job_links[:10]:
+                # Job links with numeric IDs or job patterns
+                job_links = [l for l in all_links if re.search(
+                    r'\d{4,}|/job/|/vacancy/|/oferta|/empleo|/position|/career|/opening',
+                    l.get('href', ''), re.I)]
+                print(f"Job-related links: {len(job_links)}")
+                for l in job_links[:8]:
                     print(f"  -> {l.get_text(strip=True)[:80]} | {l['href']}")
-                
+
+                # Relevant links by keyword
+                relevant = [l for l in all_links
+                            if any(kw in l.get_text(strip=True).lower() for kw in ROLE_KEYWORDS)
+                            and not any(kw in l.get_text(strip=True).lower() for kw in EXCLUDE_KEYWORDS)
+                            and len(l.get_text(strip=True)) > 10]
+                print(f"Relevant by keyword: {len(relevant)}")
+                for l in relevant[:8]:
+                    print(f"  -> {l.get_text(strip=True)[:80]} | {l['href']}")
+
                 # Headings
                 for tag in ["h2", "h3", "h4"]:
                     headings = soup.find_all(tag)
                     if headings and len(headings) < 20:
                         print(f"{tag} headings ({len(headings)}):")
-                        for h in headings[:8]:
+                        for h in headings[:6]:
                             print(f"  -> {h.get_text(strip=True)[:80]}")
+                break  # Stop at first successful URL
                             
-                # Look for any text containing job titles
-                relevant_links = [l for l in all_links 
-                                  if any(kw in l.get_text(strip=True).lower() for kw in ROLE_KEYWORDS)
-                                  and not any(kw in l.get_text(strip=True).lower() for kw in EXCLUDE_KEYWORDS)
-                                  and len(l.get_text(strip=True)) > 10]
-                print(f"\nRelevant links by keyword: {len(relevant_links)}")
-                for l in relevant_links[:10]:
-                    print(f"  -> {l.get_text(strip=True)[:80]} | {l['href']}")
-                    
         except Exception as e:
-            print(f"imec error ({url}): {e}")
-
-
-def test_bsc_confirmation():
-    print("\n=== BSC - Confirmation run ===")
-    try:
-        url = "https://www.bsc.es/join-us/job-opportunities"
-        r = requests.get(url, headers=HEADERS, timeout=10)
-        print(f"Status: {r.status_code}")
-        soup = BeautifulSoup(r.text, "html.parser")
-        
-        all_links = soup.find_all("a", href=True)
-        job_links = [l for l in all_links if "/job-opportunities/" in l.get('href', '')
-                     and l.get_text(strip=True)
-                     and len(l.get_text(strip=True)) > 10]
-        
-        relevant = []
-        for l in job_links:
-            title = l.get_text(strip=True)
-            title_lower = title.lower()
-            if any(kw in title_lower for kw in ROLE_KEYWORDS) and not any(kw in title_lower for kw in EXCLUDE_KEYWORDS):
-                relevant.append({"title": title, "url": l['href']})
-        
-        print(f"Total jobs: {len(job_links)}, Relevant: {len(relevant)}")
-        for j in relevant:
-            print(f"  -> {j['title']}")
-            print(f"     {j['url']}")
-            
-    except Exception as e:
-        print(f"BSC error: {e}")
+            print(f"{name} error ({url}): {e}")
 
 
 if __name__ == "__main__":
-    print("Testing imec and BSC v6...")
-    test_imec_jobs()
-    test_bsc_confirmation()
+    print("Testing CIC Nanogune and DIPC/CFM...")
+
+    test_portal_generic("CIC NANOGUNE", [
+        "https://nanogune.eu/en/working-with-us/job-offers",
+        "https://nanogune.eu/en/careers",
+        "https://nanogune.eu/en/working-with-us",
+        "https://www.nanogune.eu/jobs",
+    ])
+
+    test_portal_generic("DIPC / CFM", [
+        "https://dipc.ehu.es/en/jobs",
+        "https://dipc.ehu.es/en/careers",
+        "https://cfm.ehu.es/en/jobs",
+        "https://www.cfm.ehu.es/en/working-with-us",
+    ])
+
     print("\nDone!")
